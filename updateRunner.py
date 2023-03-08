@@ -1,0 +1,6 @@
+import updateLottoNumbers
+import updateEuroNumbers
+import updateSFLNumbers
+import updateLHPNumbers
+import updateEHPNumbers
+import updateThunNumbers

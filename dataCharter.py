@@ -4,11 +4,12 @@ import numpy as np
 import math
 import manipulateDatabase as md
 
-def barForAllNums(csvFile, bonus=None):
+# NEED TO UPDATE THIS METHOD; MAYBE MAKE GENERAL METHOD LIKE MD METHODS??
+def barForAllNumsLotto(csvFile, bonus=None):
     n = 59
     counts = [0]*(n+1)
     bonus = [0]*(n+1)
-    allBalls = md.getAllBalls(csvFile)
+    allBalls = md.getAllBallsLotto(csvFile)
     for i in range(len(allBalls)):
         for j in range(len(allBalls[i])):
             if bonus:
@@ -57,6 +58,12 @@ def barForAllNums(csvFile, bonus=None):
 
         cwd = os.getcwd()
         plot.savefig(cwd+"\\charts\\ballsBar.png", bbox_inches="tight")
+
+
+def barForAllNums(csvFile, game, bonus=None):
+    match game:
+        case lotto:
+            return barForAllNumsLotto(csvFile, bonus)
 
 
 def barForJackpotWinNums(csvFile):
@@ -195,7 +202,7 @@ def binomialForNum(csvFile, num):
 
     count = 0
     
-    allBalls = md.getAllBalls(csvFile)
+    allBalls = md.getAllBallsLotto(csvFile)
     n = len(allBalls)
     for i in range(n):
         for j in range(len(allBalls[i])):
@@ -230,8 +237,8 @@ def binomialForNum(csvFile, num):
 
 
 
-#barForAllNums("lottoDatabase.csv", True)
+barForAllNums("lottoDatabase.csv", True)
 #barForJackpotWinNums("lottoDatabase.csv")
 #binomialForNum("lottoDatabase.csv",11)
 #barForAllWinners("lottoDatabase.csv")
-lineForWinCat("lottoDatabase.csv",5)
+#lineForWinCat("lottoDatabase.csv",5)
