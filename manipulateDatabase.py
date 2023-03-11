@@ -2,17 +2,8 @@ import statistics
 import csv
 import re
 
-
-# REWRITE ALL THIS USING CSV PACKAGE.  USE DICTREADER
-# WE DO NOT NEED A GET ALL INFO METHOD, JUST SPECIFIC INFO EXTRACTOR METHODS
-#   LIKE GET ALL BALLS, ALL WINNERS ETC.
-
-# EXPANDED TO OTHER NATIONAL LOTTERY GAMES SO SOME OF THESE METHODS WOULD NEED
-#   TO BE UPDATED. MAY NEED TO IMPLEMENT CASES FOR DIFFERENT GAMES
-#   AS IN GAME=LOTTO;EUROMILLIONS;ETC
-#   NEED TO HAVE DIFFERENT GAME FIELD NAMES AS WELL SO LOTTO_FIELD_NAMES ETC
-#   CAN DESIGN A GENERAL METHOD WHICH ASKS FOR NAME OF GAME THEN FILTERS TO
-#   A SUB METHOD FOR THAT SPECIFIC GAME
+# TO BE DONE:
+# CLEARER COMMENTS + MORE COMMENTS
 
 LOTTO_MACHINE_SET = ["Arthur","Guinevere","Lancelot","Merlin"]
 # Please note sfl and thunderballs share the same machines
@@ -65,6 +56,7 @@ THUN_FIELD_NAMES = ["DRAW DATE","BALL 1","BALL 2","BALL 3","BALL 4","BALL 5",
                     "PRIZE:MATCH0+THUNDERBALL"]
 
 
+''' BELOW IS CURRENTLY REDUNDANT - LEFT AS REMINDER OF DIFFERENT OPTION(?) '''
 # Object class for one night's result
 class DrawResult:
 
@@ -88,7 +80,8 @@ def getDate(string):
     return date
 
 
-# Converts the date to a completely numerical format
+# Converts the date to a completely the numerical format YYYYMMDD
+# Purpose is to be able to compare and sort dates
 def dateConverter(string):
     monthNum = None
     day, hyphon, tail = string.partition("-")
@@ -121,6 +114,8 @@ def dateConverter(string):
     return int(year+monthNum+day)
 
 
+''' BELOW METHOD IS CURRENTLY REDUNDANT - NO LONGER USED; SUPERCEDED BY CSV LIB
+     KEPT AS DIFFERENT OPTION(?) '''
 # Returns an array of the 7 Lotto balls from a given Lotto result
 def getBalls(string):
     date, com0, tail0 = string.partition(",")
@@ -152,6 +147,8 @@ def listChecker(array):
         return False
 
 
+# Helper function that checks if the provided string is a valid date
+# in the format of DD-Mon-20YY
 def dateFormatChecker(string):
     if re.match("[0-3][0-9]-[A-Z][a-z]{2}-20[0-9]{2}", string):
         day, hyphen1, rest = string.partition("-")
@@ -178,6 +175,8 @@ def dateFormatChecker(string):
         return False
 
 
+''' BELOW FUNCTION IS REDUNDANT(?) - KEPT AS REMINDER '''
+# Helper function which extracts life ball number in string
 def lifeBallConverter(lifeBall):
     return int(lifeBall[:3])
 
@@ -185,6 +184,7 @@ def lifeBallConverter(lifeBall):
 # Returns an array of arrays of all the 7 Lotto balls from the specified database file
 # -Note: if machine field is omitted returns all lotto ball results
 #        else returns only those results from draws made by that machine
+# Will throw error if the machine specified is not a lotto machine
 def getAllBallsLotto(csvFile, machine=None):
     allBalls = []
     if machine is None:
@@ -220,8 +220,10 @@ def getAllBallsLotto(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for lotto i.e. either: %r." % LOTTO_MACHINE_SET)
 
 
-# MIGHT WANT TO SEPERATE THE LUCKY STARS AS THEY ARE A COMPLETELY DIFFERENT
-#   SET OF NUMBERS FROM THE MAIN 5 DRAWN BALLS
+''' MIGHT WANT TO SEPERATE THE LUCKY STARS AS THEY ARE A COMPLETELY DIFFERENT
+      SET OF NUMBERS FROM THE MAIN 5 DRAWN BALLS '''
+# Returns an array of arrays of all 7 euromillion balls (including lucky stars)
+# from the specified database
 def getAllBallsEuro(csvFile):
     allBalls = []
     with open(csvFile, newline="") as file:
@@ -239,7 +241,11 @@ def getAllBallsEuro(csvFile):
     return allBalls
 
 
-# LIFE BALL IS NOT AN INTEGER; IT IS A STR IN THE FORMAT SFL_
+# Returns an array of arrays of all 6 set for life balls (including the life ball)
+# from the specified database; please note the life ball is converted
+# -Note: if machine field is omitted returns all set for life ball results
+#        else returns only those results from draws made by that machine
+# Will throw error if the machine specified is not a set for life machine
 def getAllBallsSFL(csvFile, machine=None):
     allBalls = []
     if machine is None:
@@ -252,7 +258,7 @@ def getAllBallsSFL(csvFile, machine=None):
                 balls.append(int(result["BALL 3"]))
                 balls.append(int(result["BALL 4"]))
                 balls.append(int(result["BALL 5"]))
-                balls.append(int(result["LIFE BALL"]))
+                balls.append(int(result["LIFE BALL"][:3]))
                 allBalls.append(balls)
         return allBalls
     elif machine in SFL_MACHINE_SET:
@@ -266,13 +272,18 @@ def getAllBallsSFL(csvFile, machine=None):
                     balls.append(int(result["BALL 3"]))
                     balls.append(int(result["BALL 4"]))
                     balls.append(int(result["BALL 5"]))
-                    balls.append(int(result["LIFE BALL"]))
+                    balls.append(int(result["LIFE BALL"][:3]))
                     allBalls.append(balls)
         return allBalls
     else:
         raise ValueError("Machine specified must a machine that is used for set for life i.e. either: %r." % SFL_MACHINE_SET)
 
 
+# Returns an array of arrays of all 6 lotto hot picks balls
+# from the specified database;
+# -Note: if machine field is omitted returns all lotto hot picks ball results
+#        else returns only those results from draws made by that machine
+# Will throw error if the machine specified is not a lotto hot picks machine
 def getAllBallsLHP(csvFile, machine=None):
     allBalls = []
     if machine is None:
@@ -299,13 +310,15 @@ def getAllBallsLHP(csvFile, machine=None):
                     balls.append(int(result["BALL 3"]))
                     balls.append(int(result["BALL 4"]))
                     balls.append(int(result["BALL 5"]))
-                    balls.append(int(result["LIFE BALL"]))
+                    balls.append(int(result["BALL 6"]))
                     allBalls.append(balls)
         return allBalls
     else:
         raise ValueError("Machine specified must a machine that is used for lotto hot picks i.e. either: %r." % LOTTO_MACHINE_SET)
 
 
+# Returns an array of arrays of all 5 euro hot picks balls
+# from the specified database;
 def getAllBallsEHP(csvFile):
     allBalls = []
     with open(csvFile, newline="") as file:
@@ -321,6 +334,11 @@ def getAllBallsEHP(csvFile):
     return allBalls
 
 
+# Returns an array of arrays of all 6 thunderball balls (including the thunderball)
+# from the specified database;
+# -Note: if machine field is omitted returns all thunderball ball results
+#        else returns only those results from draws made by that machine
+# Will throw error if the machine specified is not a thunderball machine
 def getAllBallsThun(csvFile, machine=None):
     allBalls = []
     if machine is None:
@@ -354,7 +372,11 @@ def getAllBallsThun(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for thunderball i.e. either: %r." % SFL_MACHINE_SET)
 
 
-# Gameless version of getAllBalls, taking the game as an argument
+# Generic method taking the game as argument as well as database, returning all
+# ball results for the specified game
+# -Note: if machine field is omitted returns all game ball results
+#        else returns only those results from draws made by that machine
+#        unless the games are euromillions or euromillion hot picks
 def getAllBalls(csvFile, game, machine=None):
     match game:
         case lotto:
@@ -373,8 +395,11 @@ def getAllBalls(csvFile, game, machine=None):
             raise ValueError("Game must be a valid national lottery game; please input either: %r." % GAME_SET)
 
 
-# Returns all ball results drawn with the ball number 'x'
+# Returns all ball results drawn with the ball number 'x' in a lotto game
 #   e.g. if x = 46; then this method returns all ball results that contain 46
+# Will throw an error if:
+#   the ball is not valid lotto number i.e. not between 1 and 59
+#   the machine specified is not a lotto machine
 def getAllBallsDrawnWithXLotto(csvFile, x, machine=None):
     allBalls = []
     if x in range(1,60):
@@ -427,6 +452,10 @@ def getAllBallsDrawnWithXLotto(csvFile, x, machine=None):
         raise ValueError("Ball number given is not within the range of balls drawn in lotto")
 
 
+# Returns all ball results drawn with the ball number 'x' in a euromillion game
+#   e.g. if x = 46; then this method returns all ball results that contain 46
+# Will throw an error the ball is not valid euromillion number
+#   i.e. not between 1 and 50
 def getAllBallsDrawnWithXEuro(csvFile, x):
     allBalls = []
     if x in range(1,51):
@@ -454,7 +483,11 @@ def getAllBallsDrawnWithXEuro(csvFile, x):
         raise ValueError("Ball number given is not within the range of balls drawn in euromillions")
 
 
-# LIFE BALL IS NOT AN INTEGER; IT IS A STR IN THE FORMAT SFL_
+# Returns all ball results drawn with the ball number 'x' in a set for life game
+#   e.g. if x = 46; then this method returns all ball results that contain 46
+# Will throw an error if:
+#   the ball is not valid set for life number i.e. not between 1 and 47
+#   the machine specified is not a set for life machine
 def getAllBallsDrawnWithXSFL(csvFile, x, machine=None):
     allBalls = []
     if x in range(1,48):
@@ -467,14 +500,14 @@ def getAllBallsDrawnWithXSFL(csvFile, x, machine=None):
                         x==int(result["BALL 3"]) or
                         x==int(result["BALL 4"]) or
                         x==int(result["BALL 5"]) or
-                        x==int(result["LIFE BALL"])):
+                        x==int(result["LIFE BALL"][:3])):
                         balls = []
                         balls.append(int(result["BALL 1"]))
                         balls.append(int(result["BALL 2"]))
                         balls.append(int(result["BALL 3"]))
                         balls.append(int(result["BALL 4"]))
                         balls.append(int(result["BALL 5"]))
-                        balls.append(int(result["LIFE BALL"]))
+                        balls.append(int(result["LIFE BALL"][:3]))
                         allBalls.append(balls)
             return allBalls
         elif machine in SFL_MACHINE_SET:
@@ -487,14 +520,14 @@ def getAllBallsDrawnWithXSFL(csvFile, x, machine=None):
                             x==int(result["BALL 3"]) or
                             x==int(result["BALL 4"]) or
                             x==int(result["BALL 5"]) or
-                            x==int(result["LIFE BALL"])):
+                            x==int(result["LIFE BALL"][:3])):
                             balls = []
                             balls.append(int(result["BALL 1"]))
                             balls.append(int(result["BALL 2"]))
                             balls.append(int(result["BALL 3"]))
                             balls.append(int(result["BALL 4"]))
                             balls.append(int(result["BALL 5"]))
-                            balls.append(int(result["LIFE BALL"]))
+                            balls.append(int(result["LIFE BALL"][:3]))
                             allBalls.append(balls)
             return allBalls
         else:
@@ -503,6 +536,11 @@ def getAllBallsDrawnWithXSFL(csvFile, x, machine=None):
         raise ValueError("Ball number given is not within the range of balls drawn in set for life")
 
 
+# Returns all ball results drawn with the ball number 'x' in a lotto hot picks game
+#   e.g. if x = 46; then this method returns all ball results that contain 46
+# Will throw an error if:
+#   the ball is not valid lotto hot picks number i.e. not between 1 and 59
+#   the machine specified is not a lotto hot picks machine
 def getAllBallsDrawnWithXLHP(csvFile, x, machine=None):
     allBalls = []
     if x in range(1,60):
@@ -551,6 +589,10 @@ def getAllBallsDrawnWithXLHP(csvFile, x, machine=None):
         raise ValueError("Ball number given is not within the range of balls drawn in lotto hot picks")
 
 
+# Returns all ball results drawn with the ball number 'x' in a euromillion hot picks game
+#   e.g. if x = 46; then this method returns all ball results that contain 46
+# Will throw an error the ball is not valid euromillion hot picks number
+#   i.e. not between 1 and 50
 def getAllBallsDrawnWithXEHP(csvFile, x):
     allBalls = []
     if x in range(1,51):
@@ -573,7 +615,12 @@ def getAllBallsDrawnWithXEHP(csvFile, x):
     else:
         raise ValueError("Ball number given is not within the range of balls drawn in euromillions hot picks")
 
-    
+
+# Returns all ball results drawn with the ball number 'x' in a thunderball game
+#   e.g. if x = 26; then this method returns all ball results that contain 26
+# Will throw an error if:
+#   the ball is not valid thunderball number i.e. not between 1 and 39
+#   the machine specified is not a thunderball machine
 def getAllBallsDrawnWithXThun(csvFile, x, machine=None):
     allBalls = []
     if x in range(1,40):
@@ -622,10 +669,14 @@ def getAllBallsDrawnWithXThun(csvFile, x, machine=None):
         raise ValueError("Ball number given is not within the range of balls drawn in thunderball")
 
 
+# General method that filters to the correct game method to
+# return all ball results drawn with the ball number 'x' in the specified game
+#   e.g. if x = 46; then this method returns all ball results that contain 46
+# Will throw error if the game specified is not a valid game
 def getAllBallsDrawnWithX(csvFile, x, game, machine=None):
     match game:
         case lotto:
-            # COULD CHECK X IN RANGE HERE INSTEAD??
+            ''' COULD CHECK X IN RANGE HERE INSTEAD(?) '''
             return getAllBallsDrawnWithXLotto(csvFile, x, machine)
         case euromillions:
             return getAllBallsDrawnWithXEuro(csvFile, x)
@@ -641,11 +692,17 @@ def getAllBallsDrawnWithX(csvFile, x, game, machine=None):
             raise ValueError("Game must be a valid national lottery game; please input either: %r." % GAME_SET)
 
 
-# TO BE COMPLETED: LIST VERSION OF ABOVE - NAMELY RETURN ALL DRAWN SETS WITH BALLS IN THE LIST
+# Returns all ball results drawn that contain all the numbers in the list provided
+# for every lotto game in the provided database file
+# Essentially list version of getAllBallsDrawnWithXLotto
+# Will throw errors if:
+#   array provided is empty;
+#   array provided is not a list of numbers
+#   the machine specified is not a lotto machine
 def getAllBallsDrawnWithListLotto(csvFile, array, machine=None):
     allBalls = []
-    # WE SHOULD CHECK IF THE ARRAY CONTAINS NUMBERS FIRST?
-    if array: # USE ISINSTANCE([1,2],LIST) TO CHECK IF ARRAY IS LIST:
+    # Check to see the array provided is not empty
+    if array:
         if listChecker(array):
             if machine is None:
                 with open(csvFile, newline="") as file:
@@ -696,6 +753,12 @@ def getAllBallsDrawnWithListLotto(csvFile, array, machine=None):
         raise ValueError("Please provide a list of numbers when using this method")
 
 
+# Returns all ball results drawn that contain all the numbers in the list provided
+# for every euromillion game in the provided database file
+# Essentially list version of getAllBallsDrawnWithXEuro
+# Will throw errors if:
+#   array provided is empty;
+#   array provided is not a list of numbers
 def getAllBallsDrawnWithListEuro(csvFile, array):
     allBalls = []
     if array:
@@ -725,7 +788,13 @@ def getAllBallsDrawnWithListEuro(csvFile, array):
         raise ValueError("Please provide a list of numbers when using this method")
 
 
-# LIFE BALL IS NOT AN INTEGER; IT IS A STR IN THE FORMAT SFL_
+# Returns all ball results drawn that contain all the numbers in the list provided
+# for every set for life game in the provided database file
+# Essentially list version of getAllBallsDrawnWithXSFL
+# Will throw errors if:
+#   array provided is empty;
+#   array provided is not a list of numbers
+#   machine specified is not a set for life machine
 def getAllBallsDrawnWithListSFL(csvFile, array, machine=None):
     allBalls = []
     if array:
@@ -740,7 +809,7 @@ def getAllBallsDrawnWithListSFL(csvFile, array, machine=None):
                         balls.append(int(result["BALL 3"]))
                         balls.append(int(result["BALL 4"]))
                         balls.append(int(result["BALL 5"]))
-                        balls.append(int(result["LIFE BALL"]))
+                        balls.append(int(result["LIFE BALL"][:3]))
                         flag = True
                         for x in array:
                             if x not in balls:
@@ -760,7 +829,7 @@ def getAllBallsDrawnWithListSFL(csvFile, array, machine=None):
                             balls.append(int(result["BALL 3"]))
                             balls.append(int(result["BALL 4"]))
                             balls.append(int(result["BALL 5"]))
-                            balls.append(int(result["LIFE BALL"]))
+                            balls.append(int(result["LIFE BALL"][:3]))
                             flag = True
                             for x in array:
                                 if x not in balls:
@@ -777,10 +846,16 @@ def getAllBallsDrawnWithListSFL(csvFile, array, machine=None):
         raise ValueError("Please provide a list of numbers when using this method")
 
 
+# Returns all ball results drawn that contain all the numbers in the list provided
+# for every lotto hot picks game in the provided database file
+# Essentially list version of getAllBallsDrawnWithXLHP
+# Will throw errors if:
+#   array provided is empty;
+#   array provided is not a list of numbers
+#   machine specified is not a set for life machine
 def getAllBallsDrawnWithListLHP(csvFile, array, machine=None):
     allBalls = []
-    # WE SHOULD CHECK IF THE ARRAY CONTAINS NUMBERS FIRST?
-    if array: # USE ISINSTANCE([1,2],LIST) TO CHECK IF ARRAY IS LIST:
+    if array:
         if listChecker(array):
             if machine is None:
                 with open(csvFile, newline="") as file:
@@ -829,6 +904,12 @@ def getAllBallsDrawnWithListLHP(csvFile, array, machine=None):
         raise ValueError("Please provide a list of numbers when using this method")
 
 
+# Returns all ball results drawn that contain all the numbers in the list provided
+# for every euromillion hot picks game in the provided database file
+# Essentially list version of getAllBallsDrawnWithXEHP
+# Will throw errors if:
+#   array provided is empty;
+#   array provided is not a list of numbers
 def getAllBallsDrawnWithListEHP(csvFile, array):
     allBalls = []
     if array:
@@ -856,6 +937,13 @@ def getAllBallsDrawnWithListEHP(csvFile, array):
         raise ValueError("Please provide a list of numbers when using this method")
 
 
+# Returns all ball results drawn that contain all the numbers in the list provided
+# for every thunderball game in the provided database file
+# Essentially list version of getAllBallsDrawnWithXThun
+# Will throw errors if:
+#   array provided is empty;
+#   array provided is not a list of numbers
+#   machine specified is not a thunderball machine
 def getAllBallsDrawnWithListThun(csvFile, array, machine=None):
     allBalls = []
     if array:
@@ -907,6 +995,10 @@ def getAllBallsDrawnWithListThun(csvFile, array, machine=None):
         raise ValueError("Please provide a list of numbers when using this method")
 
 
+# General method for that returns all ball results drawn that contain
+# all the numbers in the list provided for the game specified in the database
+# Essentially list version of getAllBallsDrawnWithX
+# Will throw error if the game specified is not a valid game
 def getAllBallsDrawnWithList(csvFile, array, game, machine=None):
     match game:
         case lotto:
@@ -924,7 +1016,10 @@ def getAllBallsDrawnWithList(csvFile, array, game, machine=None):
         case _:
             raise ValueError("Game must be a valid national lottery game; please input either: %r." % GAME_SET)
 
-
+# Returns all the balls of the lotto result on the specified date given
+# Will throw error if:
+#   the date given is invalid or not of the right format
+#   the machine specified is not a lotto machine
 def getAllBallsOnLotto(csvFile, date, machine=None):
     if dateFormatChecker(date):
         allBalls = []
@@ -965,6 +1060,8 @@ def getAllBallsOnLotto(csvFile, date, machine=None):
         raise ValueError("Date provided is not a valid date")
 
 
+# Returns all the balls of the euromillion result on the specified date given
+# Will throw error if the date given is invalid or not of the right format
 def getAllBallsOnEuro(csvFile, date):
     if dateFormatChecker(date):
         allBalls = []
@@ -986,6 +1083,10 @@ def getAllBallsOnEuro(csvFile, date):
         raise ValueError("Date provided is not a valid date")
 
 
+# Returns all the balls of the set for life result on the specified date given
+# Will throw error if:
+#   the date given is invalid or not of the right format
+#   the machine specified is not a set for life machine
 def getAllBallsOnSFL(csvFile, date, machine=None):
     if dateFormatChecker(date):
         allBalls = []
@@ -1000,7 +1101,7 @@ def getAllBallsOnSFL(csvFile, date, machine=None):
                         balls.append(int(result["BALL 3"]))
                         balls.append(int(result["BALL 4"]))
                         balls.append(int(result["BALL 5"]))
-                        balls.append(int(result["LIFE BALL"]))
+                        balls.append(int(result["LIFE BALL"][:3]))
                         allBalls.append(balls)
             return allBalls
         elif machine in SFL_MACHINE_SET:
@@ -1015,7 +1116,7 @@ def getAllBallsOnSFL(csvFile, date, machine=None):
                             balls.append(int(result["BALL 3"]))
                             balls.append(int(result["BALL 4"]))
                             balls.append(int(result["BALL 5"]))
-                            balls.append(int(result["LIFE BALL"]))
+                            balls.append(int(result["LIFE BALL"][:3]))
                             allBalls.append(balls)
             return allBalls
         else:
@@ -1024,6 +1125,10 @@ def getAllBallsOnSFL(csvFile, date, machine=None):
         raise ValueError("Date provided is not a valid date")
 
 
+# Returns all the balls of the lotto hot picks result on the specified date given
+# Will throw error if:
+#   the date given is invalid or not of the right format
+#   the machine specified is not a lotto hot picks machine
 def getAllBallsOnLHP(csvFile, date, machine=None):
     if dateFormatChecker(date):
         allBalls = []
@@ -1062,6 +1167,8 @@ def getAllBallsOnLHP(csvFile, date, machine=None):
         raise ValueError("Date provided is not a valid date")
 
 
+# Returns all the balls of the euromillion hot picks result on the specified date given
+# Will throw error if the date given is invalid or not of the right format
 def getAllBallsOnEHP(csvFile, date):
     if dateFormatChecker(date):
         allBalls = []
@@ -1081,6 +1188,10 @@ def getAllBallsOnEHP(csvFile, date):
         raise ValueError("Date provided is not a valid date")
 
 
+# Returns all the balls of the thunderball result on the specified date given
+# Will throw error if:
+#   the date given is invalid or not of the right format
+#   the machine specified is not a thunderball machine
 def getAllBallsOnThun(csvFile, date, machine=None):
     if dateFormatChecker(date):
         allBalls = []
@@ -1118,7 +1229,8 @@ def getAllBallsOnThun(csvFile, date, machine=None):
     else:
         raise ValueError("Date provided is not a valid date")
 
-
+# General method that return the balls drawn of the specified game on the specified date
+# Will throw error if the game specified is not a valid game
 def getAllBallsOn(csvFile, date, game, machine=None):
     match game:
         case lotto:
@@ -1137,6 +1249,11 @@ def getAllBallsOn(csvFile, date, game, machine=None):
             raise ValueError("Game must be a valid national lottery game; please input either: %r." % GAME_SET)
 
 
+# Returns an array of arrays with all the balls for each result between the two
+# dates (date1 & date2) provided for the lotto games given the specified database
+# Will throw an error if:
+#   either of the dates specified is not of the right format or invalid
+#   if machine is provided, it is not a valid machine
 def getAllBallsBetweenLotto(csvFile, date1, date2, machine=None):
     if dateFormatChecker(date1) & dateFormatChecker(date2):
         allBalls = []
@@ -1181,6 +1298,9 @@ def getAllBallsBetweenLotto(csvFile, date1, date2, machine=None):
         raise ValueError("A date provided is not a valid date")
 
 
+# Returns an array of arrays with all the balls for each result between the two
+# dates (date1 & date2) provided for the euromillion games given the specified database
+# Will throw an error if either of the dates specified is not of the right format or invalid
 def getAllBallsBetweenEuro(csvFile, date1, date2):
     if dateFormatChecker(date1) & dateFormatChecker(date2):
         allBalls = []
@@ -1205,6 +1325,11 @@ def getAllBallsBetweenEuro(csvFile, date1, date2):
         raise ValueError("A date provided is not a valid date")
 
 
+# Returns an array of arrays with all the balls for each result between the two
+# dates (date1 & date2) provided for the set for life games given the specified database
+# Will throw an error if:
+#   either of the dates specified is not of the right format or invalid
+#   if machine is provided, it is not a valid machine
 def getAllBallsBetweenSFL(csvFile, date1, date2, machine=None):
     if dateFormatChecker(date1) & dateFormatChecker(date2):
         allBalls = []
@@ -1222,7 +1347,7 @@ def getAllBallsBetweenSFL(csvFile, date1, date2, machine=None):
                         balls.append(int(result["BALL 3"]))
                         balls.append(int(result["BALL 4"]))
                         balls.append(int(result["BALL 5"]))
-                        balls.append(int(result["LIFE BALL"])
+                        balls.append(int(result["LIFE BALL"][:3])
                         allBalls.append(balls)
             return allBalls
         elif machine in SFL_MACHINE_SET:
@@ -1238,7 +1363,7 @@ def getAllBallsBetweenSFL(csvFile, date1, date2, machine=None):
                             balls.append(int(result["BALL 3"]))
                             balls.append(int(result["BALL 4"]))
                             balls.append(int(result["BALL 5"]))
-                            balls.append(int(result["LIFE BALL"])
+                            balls.append(int(result["LIFE BALL"][:3])
                             allBalls.append(balls)
             return allBalls
         else:
@@ -1247,6 +1372,12 @@ def getAllBallsBetweenSFL(csvFile, date1, date2, machine=None):
         raise ValueError("A date provided is not a valid date")
 
 
+# Returns an array of arrays with all the balls for each result between the two
+# dates (date1 & date2) provided for the lotto hot picks games given the
+# specified database
+# Will throw an error if:
+#   either of the dates specified is not of the right format or invalid
+#   if machine is provided, it is not a valid machine
 def getAllBallsBetweenLHP(csvFile, date1, date2, machine=None):
     if dateFormatChecker(date1) & dateFormatChecker(date2):
         allBalls = []
@@ -1289,6 +1420,10 @@ def getAllBallsBetweenLHP(csvFile, date1, date2, machine=None):
         raise ValueError("A date provided is not a valid date")
 
 
+# Returns an array of arrays with all the balls for each result between the two
+# dates (date1 & date2) provided for the euromillion hot picks games
+# given the specified database
+# Will throw an error if either of the dates specified is not of the right format or invalid
 def getAllBallsBetweenEHP(csvFile, date1, date2):
     if dateFormatChecker(date1) & dateFormatChecker(date2):
         allBalls = []
@@ -1311,6 +1446,11 @@ def getAllBallsBetweenEHP(csvFile, date1, date2):
         raise ValueError("A date provided is not a valid date")
 
 
+# Returns an array of arrays with all the balls for each result between the two
+# dates (date1 & date2) provided for the thunderball games given the specified database
+# Will throw an error if:
+#   either of the dates specified is not of the right format or invalid
+#   if machine is provided, it is not a valid machine
 def getAllBallsBetweenThun(csvFile, date1, date2, machine=None):
     if dateFormatChecker(date1) & dateFormatChecker(date2):
         allBalls = []
@@ -1353,6 +1493,9 @@ def getAllBallsBetweenThun(csvFile, date1, date2, machine=None):
         raise ValueError("A date provided is not a valid date")
 
 
+# Generic method which returns all ball results specified between the dates provided
+# for the game and database specified
+# Will throw error if the game specified is not a valid game
 def getAllBallsBetween(csvFile, date1, date2, game, machine=None):
     match game:
         case lotto:
@@ -1370,7 +1513,8 @@ def getAllBallsBetween(csvFile, date1, date2, game, machine=None):
         case _:
             raise ValueError("Game must be a valid national lottery game; please input either: %r." % GAME_SET)
 
-
+# Returns an array of arrays with all the balls for each winning jackpot result for lotto
+# Will throw an error if machine is provided, is not a valid machine
 def getAllJackpotWinnersLotto(csvFile, machine=None):
     allBalls = []
     if machine is None:
@@ -1408,6 +1552,7 @@ def getAllJackpotWinnersLotto(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for lotto i.e. either: %r." % LOTTO_MACHINE_SET)
 
 
+# Returns an array of arrays with all the balls for each winning jackpot result for euromillion
 def getAllJackpotWinnersEuro(csvFile):
     allBalls = []
     with open(csvFile, newline="") as file:
@@ -1426,7 +1571,8 @@ def getAllJackpotWinnersEuro(csvFile):
     return allBalls
 
 
-# LIFE BALL IS NOT AN INTEGER; IT IS A STR IN THE FORMAT SFL_
+# Returns an array of arrays with all the balls for each winning jackpot result for set for life
+# Will throw an error if machine is provided, is not a valid machine
 def getAllJackpotWinnersSFL(csvFile, machine=None):
     allBalls = []
     if machine is None:
@@ -1440,7 +1586,7 @@ def getAllJackpotWinnersSFL(csvFile, machine=None):
                     balls.append(int(result["BALL 3"]))
                     balls.append(int(result["BALL 4"]))
                     balls.append(int(result["BALL 5"]))
-                    balls.append(int(result["LIFE BALL"]))
+                    balls.append(int(result["LIFE BALL"][:3]))
                     allBalls.append(balls)
         return allBalls
     elif machine in SFL_MACHINE_SET:
@@ -1455,13 +1601,14 @@ def getAllJackpotWinnersSFL(csvFile, machine=None):
                         balls.append(int(result["BALL 3"]))
                         balls.append(int(result["BALL 4"]))
                         balls.append(int(result["BALL 5"]))
-                        balls.append(int(result["LIFE BALL"]))
+                        balls.append(int(result["LIFE BALL"][:3]))
                         allBalls.append(balls)
         return allBalls
     else:
         raise ValueError("Machine specified must a machine that is used for set for life i.e. either: %r." % SFL_MACHINE_SET)
 
-
+# Returns an array of arrays with all the balls for each winning jackpot result for lotto hot picks
+# Will throw an error if machine is provided, is not a valid machine
 def getAllJackpotWinnersLHP(csvFile, machine=None):
     allBalls = []
     if machine is None:
@@ -1497,6 +1644,7 @@ def getAllJackpotWinnersLHP(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for lotto hot picks i.e. either: %r." % LOTTO_MACHINE_SET)
 
 
+# Returns an array of arrays with all the balls for each winning jackpot result for euromillion hot picks
 def getAllJackpotWinnersEHP(csvFile):
     allBalls = []
     with open(csvFile, newline="") as file:
@@ -1513,6 +1661,8 @@ def getAllJackpotWinnersEHP(csvFile):
     return allBalls
 
 
+# Returns an array of arrays with all the balls for each winning jackpot result for thunderball
+# Will throw an error if machine is provided, is not a valid machine
 def getAllJackpotWinnersThun(csvFile, machine=None):
     allBalls = []
     if machine is None:
@@ -1548,6 +1698,8 @@ def getAllJackpotWinnersThun(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for thunderball i.e. either: %r." % SFL_MACHINE_SET)
 
 
+# General method which returns all jackpot winning ball results for the game specified
+# Will throw error if the game specified is not a valid game
 def getAllJackpotWinners(csvFile, game, machine=None):
     match game:
         case lotto:
@@ -1575,7 +1727,9 @@ def getAllJackpotsMoreThan(csvFile, game, moreThan, machine=None):
             return getAllJackpotsMoreThan(csvFile, moreThan, machine)
 '''
 
-
+# Returns an array of arrays with all the numbers of each winning category for
+# each lotto result
+# Will throw an error if machine is provided, is not a valid machine
 def getAllWinnersLotto(csvFile, machine=None):
     allWinners = []
     if machine is None:
@@ -1609,6 +1763,8 @@ def getAllWinnersLotto(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for lotto i.e. either: %r." % LOTTO_MACHINE_SET)
 
 
+# Returns an array of arrays with all the numbers of each winning category for
+# each euromillion result
 def getAllWinnersEuro(csvFile):
     allWinners = []
     with open(csvFile, newline="") as file:
@@ -1632,6 +1788,9 @@ def getAllWinnersEuro(csvFile):
     return allWinners
 
 
+# Returns an array of arrays with all the numbers of each winning category for
+# each set for life result
+# Will throw an error if machine is provided, is not a valid machine
 def getAllWinnersSFL(csvFile, machine=None):
     allWinners = []
     if machine is None:
@@ -1669,6 +1828,9 @@ def getAllWinnersSFL(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for set for life i.e. either: %r." % SFL_MACHINE_SET)
 
 
+# Returns an array of arrays with all the numbers of each winning category for
+# each lotto hot picks result
+# Will throw an error if machine is provided, is not a valid machine
 def getAllWinnersLHP(csvFile, machine=None):
     allWinners = []
     if machine is None:
@@ -1700,6 +1862,8 @@ def getAllWinnersLHP(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for lotto hot picks i.e. either: %r." % LOTTO_MACHINE_SET)
 
 
+# Returns an array of arrays with all the numbers of each winning category for
+# each euromillion hot picks result
 def getAllWinnersEHP(csvFile):
     allWinners = []
     with open(csvFile, newline="") as file:
@@ -1715,6 +1879,9 @@ def getAllWinnersEHP(csvFile):
     return allWinners
 
 
+# Returns an array of arrays with all the numbers of each winning category for
+# each thunderball result
+# Will throw an error if machine is provided, is not a valid machine
 def getAllWinnersThun(csvFile, machine=None):
     allWinners = []
     if machine is None:
@@ -1754,6 +1921,9 @@ def getAllWinnersThun(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for thunderball i.e. either: %r." % SFL_MACHINE_SET)
 
 
+# Generic method which returns an array of arrays with all the numbers
+# of each winning category for each result of the game specified
+# Will throw an error if the game provided, is not a valid game
 def getAllWinners(csvFile, game, machine=None):
     match game:
         case lotto:
@@ -1772,7 +1942,9 @@ def getAllWinners(csvFile, game, machine=None):
             raise ValueError("Game must be a valid national lottery game; please input either: %r." % GAME_SET)
 
 
-#
+# Returns an array of arrays with all the prizes in each prize category for
+# each lotto result
+# Will throw an error if machine is provided, is not a valid machine
 def getAllPrizesLotto(csvFile, machine=None):
     allPrizes = []
     if machine is None:
@@ -1806,6 +1978,8 @@ def getAllPrizesLotto(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for lotto i.e. either: %r." % LOTTO_MACHINE_SET)
 
 
+# Returns an array of arrays with all the prizes in each prize category for
+# each euromillion result
 def getAllPrizesEuro(csvFile):
     allPrizes = []
     with open(csvFile, newline="") as file:
@@ -1829,6 +2003,9 @@ def getAllPrizesEuro(csvFile):
     return allPrizes
 
 
+# Returns an array of arrays with all the prizes in each prize category for
+# each set for life result
+# Will throw an error if machine is provided, is not a valid machine
 def getAllPrizesSFL(csvFile, machine=None):
     allPrizes = []
     if machine is None:
@@ -1866,6 +2043,9 @@ def getAllPrizesSFL(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for set for life i.e. either: %r." % SFL_MACHINE_SET)
 
 
+# Returns an array of arrays with all the prizes in each prize category for
+# each lotto hot picks result
+# Will throw an error if machine is provided, is not a valid machine
 def getAllPrizesLHP(csvFile, machine=None):
     allPrizes = []
     if machine is None:
@@ -1897,6 +2077,8 @@ def getAllPrizesLHP(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for lotto i.e. either: %r." % LOTTO_MACHINE_SET)
 
 
+# Returns an array of arrays with all the prizes in each prize category for
+# each euromillion hot picks result
 def getAllPrizesEHP(csvFile):
     allPrizes = []
     with open(csvFile, newline="") as file:
@@ -1912,6 +2094,9 @@ def getAllPrizesEHP(csvFile):
     return allPrizes
 
 
+# Returns an array of arrays with all the prizes in each prize category for
+# each thunderball result
+# Will throw an error if machine is provided, is not a valid machine
 def getAllPrizesThun(csvFile, machine=None):
     allPrizes = []
     if machine is None:
@@ -1951,6 +2136,9 @@ def getAllPrizesThun(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for set for life i.e. either: %r." % SFL_MACHINE_SET)
 
 
+# Generic method which returns an array of arrays with all the prizes
+# of each prize category for each result of the game specified
+# Will throw an error if the game provided, is not a valid game
 def getAllPrizes(csvFile, game, machine=None):
     match game:
         case lotto:
@@ -1968,7 +2156,11 @@ def getAllPrizes(csvFile, game, machine=None):
         case _:
             raise ValueError("Game must be a valid national lottery game; please input either: %r." % GAME_SET)
 
-
+# Returns an array of arrays of all balls from all lotto results sorted by the 'pick'
+# i.e. returns an array of 7 arrays where each of the 7 arrays contained the
+# ith pick of each result, so array 1 is all the balls that were picked first
+# from each result
+# Will throw an error if the machine is not valid
 def getAllBallsByPickLotto(csvFile, machine=None):
     allBallsByPick = [[],[],[],[],[],[],[]]
     if machine is None:
@@ -1996,6 +2188,10 @@ def getAllBallsByPickLotto(csvFile, machine=None):
         raise ValueError("Machine specified must a machine that is used for lotto i.e. either: %r." % LOTTO_MACHINE_SET)
 
 
+# Returns an array of arrays of all balls from all euromillion results sorted by the 'pick'
+# i.e. returns an array of 7 arrays where each of the 7 arrays contained the
+# ith pick of each result, so array 1 is all the balls that were picked first
+# from each result
 def getAllBallsByPickEuro(csvFile):
     allBallsByPick = [[],[],[],[],[],[],[]]
     with open(csvFile, newline="") as file:
@@ -2011,9 +2207,13 @@ def getAllBallsByPickEuro(csvFile):
     return allBallsByPick
 
 
-# LIFE BALL IS NOT AN INTEGER; IT IS A STR IN THE FORMAT SFL_
+# Returns an array of arrays of all balls from all set for life results sorted by the 'pick'
+# i.e. returns an array of 6 arrays where each of the 6 arrays contained the
+# ith pick of each result, so array 1 is all the balls that were picked first
+# from each result
+# Will throw an error if the machine is not valid
 def getAllBallsByPickSFL(csvFile, machine=None):
-    allBallsByPick = [[],[],[],[],[],[],[]]
+    allBallsByPick = [[],[],[],[],[],[]]
     if machine is None:
         with open(csvFile, newline="") as file:
             reader = csv.DictReader(file, fieldnames = SFL_FIELD_NAMES)
@@ -2022,7 +2222,7 @@ def getAllBallsByPickSFL(csvFile, machine=None):
                     if i!=5:
                         allBallsByPick[i].append(int(result["BALL "+str(i+1)]))
                     else:
-                        allBallsByPick[i].append(int(result["LIFE BALL"]))
+                        allBallsByPick[i].append(int(result["LIFE BALL"][:3]))
         return allBallsByPick
     elif machine in SFL_MACHINE_SET:
         with open(csvFile, newline="") as file:
@@ -2033,14 +2233,19 @@ def getAllBallsByPickSFL(csvFile, machine=None):
                         if i!=5:
                             allBallsByPick[i].append(int(result["BALL "+str(i+1)]))
                         else:
-                            allBallsByPick[i].append(int(result["LIFE BALL"]))
+                            allBallsByPick[i].append(int(result["LIFE BALL"][:3]))
         return allBallsByPick
     else:
         raise ValueError("Machine specified must a machine that is used for set for life i.e. either: %r." % SFL_MACHINE_SET)
 
 
+# Returns an array of arrays of all balls from all lotto hot picks results sorted by the 'pick'
+# i.e. returns an array of 6 arrays where each of the 6 arrays contained the
+# ith pick of each result, so array 1 is all the balls that were picked first
+# from each result
+# Will throw an error if the machine is not valid
 def getAllBallsByPickLHP(csvFile, machine):
-    allBallsByPick = [[],[],[],[],[],[],[]]
+    allBallsByPick = [[],[],[],[],[],[]]
     if machine is None:
         with open(csvFile, newline="") as file:
             reader = csv.DictReader(file, fieldnames = LHP_FIELD_NAMES)
@@ -2060,8 +2265,12 @@ def getAllBallsByPickLHP(csvFile, machine):
         raise ValueError("Machine specified must a machine that is used for lotto hot picks i.e. either: %r." % LHP_MACHINE_SET)
 
 
+# Returns an array of arrays of all balls from all euromillion hot picks results sorted by the 'pick'
+# i.e. returns an array of 5 arrays where each of the 5 arrays contained the
+# ith pick of each result, so array 1 is all the balls that were picked first
+# from each result
 def getAllBallsByPickEHP(csvFile):
-    allBallsByPick = [[],[],[],[],[],[],[]]
+    allBallsByPick = [[],[],[],[],[]]
     with open(csvFile, newline="") as file:
         reader = csv.DictReader(file, fieldnames = EHP_FIELD_NAMES)
         for result in reader:
@@ -2070,8 +2279,13 @@ def getAllBallsByPickEHP(csvFile):
     return allBallsByPick
 
 
+# Returns an array of arrays of all balls from all thunderball results sorted by the 'pick'
+# i.e. returns an array of 6 arrays where each of the 6 arrays contained the
+# ith pick of each result, so array 1 is all the balls that were picked first
+# from each result
+# Will throw an error if the machine is not valid
 def getAllBallsByPickThun(csvFile, machine):
-    allBallsByPick = [[],[],[],[],[],[],[]]
+    allBallsByPick = [[],[],[],[],[],[]]
     if machine is None:
         with open(csvFile, newline="") as file:
             reader = csv.DictReader(file, fieldnames = THUN_FIELD_NAMES)
@@ -2097,6 +2311,11 @@ def getAllBallsByPickThun(csvFile, machine):
         raise ValueError("Machine specified must a machine that is used for thunderball i.e. either: %r." % THUN_MACHINE_SET)
 
 
+# Returns an array of arrays of all balls from all the specified game results sorted by the 'pick'
+# i.e. returns an array of 7 arrays where each of the 7 arrays contained the
+# ith pick of each result, so array 1 is all the balls that were picked first
+# from each result
+# Will throw an error if the game is not a valid game
 def getAllBallsByPick(csvFile, game, machine=None):
     match game:
         case lotto:
@@ -2115,6 +2334,9 @@ def getAllBallsByPick(csvFile, game, machine=None):
             raise ValueError("Game must be a valid national lottery game; please input either: %r." % GAME_SET)
 
 
+# Returns an array of ith ball from all lotto results where i is specified
+# e.g. i = 1; returns an array of all balls picked first in each result
+# Will throw an error if the machine is not valid
 def getAllBallsByiLotto(csvFile, i, machine=None):
     validNumbers = [1,2,3,4,5,6]
     if i in validNumbers:
@@ -2153,6 +2375,8 @@ def getAllBallsByiLotto(csvFile, i, machine=None):
         raise ValueError("'i' must be valid number between 1 to 7, as there are only 7 Lotto numbers picked for each draw")
 
 
+# Returns an array of ith ball from all euromillion results where i is specified
+# e.g. i = 1; returns an array of all balls picked first in each result
 def getAllBallsByiEuro(csvFile, i):
     validNumbers = [1,2,3,4,5]
     if i in validNumbers:
@@ -2180,7 +2404,9 @@ def getAllBallsByiEuro(csvFile, i):
         raise ValueError("'i' must be valid number between 1 to 7, as there are only 7 euromillions numbers picked for each draw")
 
 
-# LIFE BALL IS NOT AN INTEGER; IT IS A STR IN THE FORMAT SFL_
+# Returns an array of ith ball from all set for life results where i is specified
+# e.g. i = 1; returns an array of all balls picked first in each result
+# Will throw an error if the machine is not valid
 def getAllBallsByiSFL(csvFile, i, machine=None):
     validNumbers = [1,2,3,4,5]
     if i in validNumbers:
@@ -2205,13 +2431,13 @@ def getAllBallsByiSFL(csvFile, i, machine=None):
             with open(csvFile, newline="") as file:
                 reader = csv.DictReader(file, fieldnames = SFL_FIELD_NAMES)
                 for result in reader:
-                    allBallsi.append(int(result["LIFE BALL"]))
+                    allBallsi.append(int(result["LIFE BALL"][:3]))
         elif machine in SFL_MACHINE_SET:
             with open(csvFile, newline="") as file:
                 reader = csv.DictReader(file, fieldnames = SFL_FIELD_NAMES)
                 for result in reader:
                     if machine==result["MACHINE"]:
-                        allBallsi.append(int(result["LIFE BALL"]))
+                        allBallsi.append(int(result["LIFE BALL"][:3]))
             return allBallsi
         else:
             raise ValueError("Machine specified must a machine that is used for set for life i.e. either: %r." % SFL_MACHINE_SET)                
@@ -2219,6 +2445,9 @@ def getAllBallsByiSFL(csvFile, i, machine=None):
         raise ValueError("'i' must be valid number between 1 to 6, as there are only 6 set for life numbers picked for each draw")
 
 
+# Returns an array of ith ball from all lotto hot picks results where i is specified
+# e.g. i = 1; returns an array of all balls picked first in each result
+# Will throw an error if the machine is not valid
 def getAllBallsByiLHP(csvFile, i, machine):
     validNumbers = [1,2,3,4,5,6]
     if i in validNumbers:
@@ -2241,6 +2470,8 @@ def getAllBallsByiLHP(csvFile, i, machine):
         raise ValueError("'i' must be valid number between 1 to 6, as there are only 6 lotto hot picks numbers picked for each draw")
 
 
+# Returns an array of ith ball from all euromillion results where i is specified
+# e.g. i = 1; returns an array of all balls picked first in each result
 def getAllBallsByiEHP(csvFile, i):
     validNumbers = [1,2,3,4,5]
     if i in validNumbers:
@@ -2254,6 +2485,9 @@ def getAllBallsByiEHP(csvFile, i):
         raise ValueError("'i' must be valid number between 1 to 5, as there are only 5 euromillions hot picks numbers picked for each draw")
 
 
+# Returns an array of ith ball from all thunderball results where i is specified
+# e.g. i = 1; returns an array of all balls picked first in each result
+# Will throw an error if the machine is not valid
 def getAllBallsByiThun(csvFile, i, machine=None):
     validNumbers = [1,2,3,4,5]
     if i in validNumbers:
@@ -2292,8 +2526,9 @@ def getAllBallsByiThun(csvFile, i, machine=None):
         raise ValueError("'i' must be valid number between 1 to 6, as there are only 6 thunderball numbers picked for each draw")
 
 
-# This method returns the all Lotto numbers that were picked in the i-th position
-# i.e. if i=1 then it returns an array containing all the Lotto numbers that were picked 1st on each result
+# This method returns the all specified game numbers that were picked in the i-th position
+# i.e. if i=1 then it returns an array containing all the specified game numbers that were picked 1st on each result
+# Will throw error if the game is invalid
 def getAllBallsByi(csvFile, i, game, machine=None):
     match game:
         case lotto:
